@@ -39,6 +39,13 @@ void dawdle() {
   }
 }
 
+// *start: function ptr passed to the create_thread call
+// that will designate the function for each thread to
+// call. initially sets the status of each philosopher
+// to THINKING and lets the philosopher naturally
+// transition to eating by making them pick up their
+// forks and eat. runs a think-eat cycle variable times 
+// based on the integer arg passed
 void *start(void *arg) {
   // get my id from the create thread arg
   int my_id = *(int *)arg;
@@ -145,6 +152,8 @@ void *start(void *arg) {
   return NULL;
 }
 
+// get_fork: wait for the fork to be released (semaphore free)
+// then update the global table, print it, then leave
 void get_fork(int index, int id, int side) {
   // if i get a fork here and then get stuck waiting to print to the
   // table while another person tries to grab a fork then isnt htat bad?
@@ -171,6 +180,10 @@ void get_fork(int index, int id, int side) {
   sem_post(&update_table_sem);
 }
 
+// put_fork: updates the global table saying
+// that you no longer hold that fork, print new status
+// then releases semaphore for the fork index
+// that is passed
 void put_fork(int index, int id, int side) {
   // put down the fork first (give up semaphore)
   // try to get access to the update table to print now
@@ -189,10 +202,18 @@ void put_fork(int index, int id, int side) {
   sem_post(&forks[index]);
 }
 
+// eat: called after changing a philosophers status
+// to EATING. just waits for a random time from 0-1sec
 void eat() { dawdle(); }
 
+// think: called after changing a philosophers status
+// to THINKING. just waits for a random time from 0-1sec
 void think() { dawdle(); }
 
+// print_header: prints the header at the beginning
+// of the start of this process. its called by the
+// main thread at the beginning of the program
+// and adapts to how many philosophers there are
 void print_header() {
   int i;
   int j;
@@ -232,6 +253,11 @@ void print_header() {
   printf("|\n");
 }
 
+// print_status: called each time a change happens
+// on status change or fork status change, this gets
+// called which prints the whole current table
+// it is only ever called if a shared binary semaphore is
+// held by the caller
 void print_status() {
   int i;
   for (i = 0; i < NUM_PHILOSOPHERS; i++) {
